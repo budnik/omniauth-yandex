@@ -1,5 +1,5 @@
 require 'omniauth/strategies/oauth2'
-require 'xmlsimple'
+require 'json'
 
 module OmniAuth
   module Strategies
@@ -20,19 +20,6 @@ module OmniAuth
         raw_info[:uid]
       end
 
-      info do
-        {
-          :nickname => raw_info[:name],
-          :email => raw_info[:email],
-          :name => raw_info[:name],
-          :image => raw_info[:photo],
-          :location => raw_info[:country],
-          :urls => {
-            'Yandex' => raw_info[:yaru_profile]
-          }
-        }
-      end
-
       extra do
         {:raw_info => raw_info}
       end
@@ -51,18 +38,10 @@ module OmniAuth
         @raw_info ||= begin
           # Get user info from Ya.ru API
           # http://api.yandex.ru/yaru/doc/ref/concepts/discovery.xml
-          xml_data = access_token.get("https://api-yaru.yandex.ru/me/").body
-          data = XmlSimple.xml_in(xml_data)
+          json_data = access_token.get("https://login.yandex.ru/info?format=json").body
+          data = JSON.parse(json_data)
           {
-            :uid => data["id"][0],
-            :yaru_profile => data["link"][0]["href"],
-            :photo => data["link"][2]["href"],
-            :name => data["name"][0],
-            :email => data["email"][0],
-            :country => data["country"][0],
-            :city => data["city"][0],
-            :sex => data["sex"][0],
-            :skype => data["skype"][0]
+            :uid => data["id"],
           }
         end
       end
